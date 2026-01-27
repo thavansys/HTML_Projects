@@ -1,13 +1,12 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    background-color: #fff7e6;   /* Option 2: Light cream */
+    background-color: #fff7e6;
     font-family: Arial, sans-serif;
     text-align: center;
+}
+
+h1 {
+    color: darkblue;
+    margin-top: 20px;
 }
 
 .main {
@@ -29,4 +28,8 @@ body {
 iframe {
     width: 800px;
     height: 640px;
+}
+
+img {
+    cursor: pointer;
 }
