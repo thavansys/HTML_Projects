@@ -1,26 +1,37 @@
 const iframe = document.querySelector(".iframe1");
 
-function loadWiki(url) {
+function load(url) {
     iframe.src = url;
 }
 
-// Utility to bind click safely
-function bind(areaClass, wikiUrl) {
-    const el = document.querySelector("." + areaClass);
-    if (!el) return;
+document.querySelector(".chennai")
+    .addEventListener("click", () =>
+        load("https://en.wikipedia.org/wiki/Chennai_district"));
 
-    el.addEventListener("click", function (e) {
-        e.preventDefault();
-        loadWiki(wikiUrl);
-    });
-}
+document.querySelector(".kanchipuram")
+    .addEventListener("click", () =>
+        load("https://en.wikipedia.org/wiki/Kanchipuram_district"));
 
-bind("chennai", "https://en.wikipedia.org/wiki/Chennai_district");
-bind("kanchipuram", "https://en.wikipedia.org/wiki/Kanchipuram_district");
-bind("thiruvallur", "https://en.wikipedia.org/wiki/Tiruvallur_district");
-bind("vellore", "https://en.wikipedia.org/wiki/Vellore_district");
-bind("tiruvannamalai", "https://en.wikipedia.org/wiki/Tiruvannamalai_district");
-bind("salem", "https://en.wikipedia.org/wiki/Salem_district");
-bind("madurai", "https://en.wikipedia.org/wiki/Madurai_district");
-bind("tirunelveli", "https://en.wikipedia.org/wiki/Tirunelveli_district");
-bind("coimbatore", "https://en.wikipedia.org/wiki/Coimbatore_district");
+document.querySelector(".tiruvallur")
+    .addEventListener("click", () =>
+        load("https://en.wikipedia.org/wiki/Tiruvallur_district"));
+
+document.querySelector(".vellore")
+    .addEventListener("click", () =>
+        load("https://en.wikipedia.org/wiki/Vellore_district"));
+
+document.querySelector(".salem")
+    .addEventListener("click", () =>
+        load("https://en.wikipedia.org/wiki/Salem_district"));
+
+document.querySelector(".madurai")
+    .addEventListener("click", () =>
+        load("https://en.wikipedia.org/wiki/Madurai_district"));
+
+document.querySelector(".tirunelveli")
+    .addEventListener("click", () =>
+        load("https://en.wikipedia.org/wiki/Tirunelveli_district"));
+
+document.querySelector(".coimbatore")
+    .addEventListener("click", () =>
+        load("https://en.wikipedia.org/wiki/Coimbatore_district"));
