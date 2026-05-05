@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Result System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #1a73e8;
+            --primary-hover: #1557b0;
+            --bg: #f4f6f8;
+            --surface: #ffffff;
+            --text-main: #202124;
+            --text-muted: #5f6368;
+            --border: #dadce0;
+            --success-bg: #e6f4ea;
+            --success-text: #1e8e3e;
+            --error-bg: #fce8e6;
+            --error-text: #d93025;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --font: 'Inter', sans-serif;
+            --transition: all 0.3s ease;
+            --sidebar-width: 250px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --text-main: #e8eaed;
+            --text-muted: #9aa0a6;
+            --border: #3c4043;
+            --success-bg: rgba(30, 142, 62, 0.2);
+            --success-text: #81c995;
+            --error-bg: rgba(217, 48, 37, 0.2);
+            --error-text: #f28b82;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background-color: var(--bg); color: var(--text-main); line-height: 1.5; transition: background-color 0.3s, color 0.3s; }
+        button { cursor: pointer; font-family: var(--font); outline: none; border: none; }
+        input, select { font-family: var(--font); outline: none; }
+
+        /* Typography */
+        h1, h2, h3, h4 { color: var(--text-main); margin-bottom: 0.5rem; font-weight: 600; }
+        p { margin-bottom: 1rem; color: var(--text-muted); }
+
+        /* Utilities */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .grid { display: grid; }
+        .gap-1 { gap: 0.5rem; }
+        .gap-2 { gap: 1rem; }
+        .gap-4 { gap: 2rem; }
+
+        /* Buttons */
+        .btn { padding: 0.5rem 1rem; border-radius: var(--radius); font-weight: 500; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; background: var(--surface); color: var(--text-main); border: 1px solid var(--border); }
+        .btn:hover { background: var(--bg); }
+        .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-primary:hover { background: var(--primary-hover); color: white; }
+        .btn-icon { background: transparent; border: none; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; width: 40px; height: 40px; }
+        .btn-icon:hover { background: rgba(128, 128, 128, 0.1); }
+
+        /* Inputs & Forms */
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text-main); transition: var(--transition); }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2); }
+
+        /* Cards */
+        .card { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+        
+        /* Tables */
+        .table-responsive { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { font-weight: 600; color: var(--text-muted); background: var(--bg); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        tr:hover { background: rgba(128, 128, 128, 0.05); }
+
+        /* Badges */
+        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+        .badge-success { background: var(--success-bg); color: var(--success-text); }
+        .badge-error { background: var(--error-bg); color: var(--error-text); }
+        .badge-primary { background: rgba(26, 115, 232, 0.1); color: var(--primary); }
+
+        /* --- Views --- */
+        
+        /* Login Page */
+        #login-view { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; position: relative; }
+        .login-card { max-width: 400px; width: 100%; }
+        .login-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .login-tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; font-weight: 500; color: var(--text-muted); transition: var(--transition); border-bottom: 2px solid transparent; }
+        .login-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* Dark Mode Toggle Float */
+        .theme-toggle-float { position: absolute; top: 1rem; right: 1rem; }
+
+        /* Dashboard Layout */
+        .dashboard-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-width); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 40; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 1.2rem; color: var(--primary); display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-nav { flex: 1; padding: 1rem 0; }
+        .nav-item { padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 0.75rem; color: var(--text-main); text-decoration: none; font-weight: 500; cursor: pointer; transition: var(--transition); border-left: 3px solid transparent; }
+        .nav-item:hover, .nav-item.active { background: rgba(26, 115, 232, 0.05); color: var(--primary); border-left-color: var(--primary); }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; z-index: 30; }
+        .content-area { padding: 1.5rem; flex: 1; overflow-y: auto; }
+        
+        /* Hamburger menu */
+        .menu-toggle { display: none; }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; height: 100vh; transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .menu-toggle { display: block; }
+        }
+
+        /* Overview Grid */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { border-left: 4px solid var(--primary); }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--text-main); line-height: 1; margin-top: 0.5rem; }
+
+        /* Loader */
+        #loader { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .spinner { width: 50px; height: 50px; border: 4px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toast */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 1rem 1.5rem; border-radius: var(--radius); color: white; box-shadow: var(--shadow-md); font-weight: 500; animation: slideIn 0.3s forwards; opacity: 0; transform: translateX(100%); display: flex; align-items: center; gap: 0.5rem; }
+        .toast.success { background-color: var(--success-text); }
+        .toast.error { background-color: var(--error-text); }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOut { to { opacity: 0; } }
+
+        /* Print Layout */
+        @media print {
+            body { background: white; color: black; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .card { box-shadow: none; border: none; padding: 0; }
+            table { border: 1px solid #000; }
+            th, td { border: 1px solid #000; color: #000 !important; }
+            .badge { border: 1px solid #000; color: #000 !important; background: transparent !important; }
+            @page { margin: 2cm; }
+        }
+        .print-only { display: none; }
+        
+        .print-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 1rem; margin-bottom: 2rem; }
+        .print-header h1 { color: #000; font-size: 24px; text-transform: uppercase; }
+        .student-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; border: 1px solid #000; padding: 1.5rem; }
+        .student-details-grid div { font-size: 14px; }
+        .student-details-grid b { width: 120px; display: inline-block; }
+        
+        /* Add Result Grid */
+        .marks-grid { display: grid; grid-template-columns: 100px 100px; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div class="card" style="max-width: 400px; width: 90%; text-align: center; background: var(--card-bg); padding: 2rem; border-radius: var(--radius);">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+            <h3 style="margin-bottom: 1rem;">Confirm Removal</h3>
+            <p id="confirm-modal-text" style="margin-bottom: 2rem; color: var(--text-muted);"></p>
+            <div class="flex gap-1 justify-center">
+                <button id="confirm-modal-cancel" class="btn" style="background: var(--bg);">Cancel</button>
+                <button id="confirm-modal-ok" class="btn" style="background: var(--error-text); color: white;">Yes, Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- VIEW: LOGIN -->
+    <section id="login-view">
+        <button class="btn-icon theme-toggle-float theme-toggle" title="Toggle Theme" aria-label="Toggle Theme">🌓</button>
+        
+        <div class="card login-card">
+            <div class="text-center" style="margin-bottom: 2rem;">
+                <h2 style="color: var(--primary);">College Portal</h2>
+                <p>Online Result System</p>
+            </div>
+
+            <div class="login-tabs">
+                <div class="login-tab active" data-target="student-login">Student</div>
+                <div class="login-tab" data-target="admin-login">Admin</div>
+            </div>
+
+            <!-- Student Login Form -->
+            <form id="student-login" class="login-form">
+                <div class="form-group">
+                    <label>Roll Number</label>
+                    <input type="text" class="form-control" id="login-roll" placeholder="e.g. CS001" required>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" class="form-control" id="login-dob" required>
+                </div>
+                <!-- Demo help text -->
+                <p style="font-size: 0.8rem; margin-top:-0.5rem">Demo: Roll: CS001, DOB: 2002-05-15</p>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">Login as Student</button>
+            </form>
+
+            <!-- Admin Login Form -->
+            <form id="admin-login" class="login-form hidden">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" class="form-control" id="login-admin-user" placeholder="Enter username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" id="login-admin-pass" placeholder="Enter password" required>
+                </div>
+                <!-- Demo help text -->
+                <p style="font-size: 0.8rem; margin-top:-0.5rem">Demo: admin / admin123</p>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">Login as Admin</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- VIEW: STUDENT DASHBOARD -->
+    <section id="student-view" class="hidden dashboard-layout">
+        <div class="main-content">
+            <div class="topbar">
+                <div class="flex items-center gap-2">
+                    <h2 style="margin:0; color: var(--primary);">Student Portal</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="btn-icon theme-toggle" title="Toggle Theme">🌓</button>
+                    <button class="btn logout-btn">Logout</button>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+                    <h3>My Dashboard</h3>
+                    <div class="flex gap-1">
+                        <button class="btn" style="background: linear-gradient(45deg, #1a73e8, #9b51e0); color: white; border: none;" onclick="fetchStudentAIInsights()">AI Analysis</button>
+                        <button class="btn btn-primary" onclick="printResult()">Print Result</button>
+                    </div>
+                </div>
+
+                <div id="student-ai-container" class="card hidden" style="margin-bottom: 2rem; border: 2px solid #9b51e0; background: linear-gradient(to right, rgba(155, 81, 224, 0.05), transparent);">
+                    <h4 style="color: #9b51e0; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">AI Performance Analysis</h4>
+                    <div id="student-ai-content" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6;"></div>
+                </div>
+
+                <div class="grid gap-2" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-bottom: 2rem;">
+                    <!-- Profile Card -->
+                    <div class="card">
+                        <h4 style="border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem;">Profile Information</h4>
+                        <div class="grid gap-1" style="grid-template-columns: 120px 1fr; font-size: 0.95rem;">
+                            <b style="color:var(--text-muted)">Name:</b> <span id="s-name"></span>
+                            <b style="color:var(--text-muted)">Roll No:</b> <span id="s-roll"></span>
+                            <b style="color:var(--text-muted)">Department:</b> <span id="s-dept"></span>
+                            <b style="color:var(--text-muted)">Semester:</b> <span id="s-sem"></span>
+                            <b style="color:var(--text-muted)">Year:</b> <span id="s-year"></span>
+                        </div>
+                    </div>
+
+                    <!-- Summary Card -->
+                    <div class="card">
+                        <h4 style="border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem;">Result Summary</h4>
+                        <div class="grid gap-1" style="grid-template-columns: 120px 1fr; font-size: 0.95rem;" id="s-summary">
+                            <!-- populated by js -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h4>Semester Marksheet</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Subject Code</th>
+                                    <th>Subject Name</th>
+                                    <th>Internal (20)</th>
+                                    <th>External (80)</th>
+                                    <th>Total (100)</th>
+                                    <th>Grade</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="s-marks-table">
+                                <!-- populated by js -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="s-no-result" class="hidden text-center" style="padding: 2rem; color: var(--text-muted);">
+                        Results have not been published yet.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW: ADMIN DASHBOARD -->
+    <section id="admin-view" class="hidden dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="admin-sidebar">
+            <div class="sidebar-header">
+                <div>College Admin</div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-panel="admin-panel-dashboard">Dashboard</div>
+                <div class="nav-item" data-panel="admin-panel-students">Students</div>
+                <div class="nav-item" data-panel="admin-panel-add">Add Result</div>
+                <div class="nav-item" data-panel="admin-panel-results">View Results</div>
+            </nav>
+            <div style="padding: 1rem; border-top: 1px solid var(--border);">
+                <button class="btn btn-primary logout-btn" style="width: 100%; justify-content: center;">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="flex items-center gap-2">
+                    <button class="btn-icon menu-toggle" id="mobile-menu-toggle">☰</button>
+                    <h3 style="margin:0">Admin Portal</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="btn-icon theme-toggle" title="Toggle Theme">🌓</button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Panel: Dashboard -->
+                <div id="admin-panel-dashboard" class="admin-panel">
+                    <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+                        <h2 style="margin: 0;">Overview</h2>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 2rem; border: 2px solid #9b51e0; background: linear-gradient(to right, rgba(155, 81, 224, 0.05), transparent);">
+                        <h4 style="color: #9b51e0; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">Ask AI about Student Results</h4>
+                        <div class="flex gap-1" style="margin-bottom: 1rem;">
+                            <input type="text" id="admin-ai-query" class="form-control" placeholder="E.g., Who has the highest CGPA? or Which students failed Computer Networks?" style="flex: 1;">
+                            <button class="btn" style="background: linear-gradient(45deg, #1a73e8, #9b51e0); color: white; border: none; padding: 0.5rem 1.5rem;" onclick="askAdminAIQuery()">Ask AI</button>
+                        </div>
+                        <div id="admin-ai-container" class="hidden" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(155, 81, 224, 0.3);">
+                            <div id="admin-ai-content" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6;"></div>
+                        </div>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="card stat-card">
+                            <p style="margin:0; font-size:0.9rem; text-transform: uppercase;">Total Students</p>
+                            <div class="stat-value" id="stat-students">0</div>
+                        </div>
+                        <div class="card stat-card" style="border-color: #34a853;">
+                            <p style="margin:0; font-size:0.9rem; text-transform: uppercase;">Results Published</p>
+                            <div class="stat-value" id="stat-results">0</div>
+                        </div>
+                        <div class="card stat-card" style="border-color: #fbbc04;">
+                            <p style="margin:0; font-size:0.9rem; text-transform: uppercase;">Overall Pass Percentage</p>
+                            <div class="stat-value" id="stat-pass">0%</div>
+                        </div>
+                        <div class="card stat-card" style="border-color: #ea4335;">
+                            <p style="margin:0; font-size:0.9rem; text-transform: uppercase;">Overall Average CGPA</p>
+                            <div class="stat-value" id="stat-cgpa">0.00</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 2rem 0 1rem;">Department-wise Performance</h3>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Department</th>
+                                        <th>Total Students</th>
+                                        <th>Results Published</th>
+                                        <th>Pass Percentage</th>
+                                        <th>Average CGPA</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dept-stats-table">
+                                    <!-- JS populated -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel: Students -->
+                <div id="admin-panel-students" class="admin-panel hidden">
+                    <h2 style="margin-bottom: 1.5rem;">Student Directory</h2>
+                    <div class="card">
+                        <div class="flex justify-between items-center" style="margin-bottom: 1rem;">
+                            <div class="flex items-center" style="gap: 1rem; width: 100%;">
+                                <input type="text" id="search-student" class="form-control" placeholder="Search by name..." style="max-width: 300px;">
+                                <select id="filter-year" class="form-control" style="max-width: 150px;">
+                                    <option value="">All Years</option>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="toggleAddStudentForm()" style="white-space: nowrap;">+ Add Student</button>
+                        </div>
+                        <div id="add-student-container" class="hidden" style="margin-bottom: 1.5rem; padding: 1.5rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(128,128,128,0.05);">
+                            <h4 style="margin-bottom: 1rem;">Register New Student</h4>
+                            <form id="add-student-form">
+                                <div class="grid gap-2" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1rem;">
+                                    <div class="form-group">
+                                        <label>Roll Number</label>
+                                        <input type="text" id="add-stu-roll" class="form-control" required placeholder="e.g. 241501231">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Name</label>
+                                        <input type="text" id="add-stu-name" class="form-control" required placeholder="Student Name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Date of Birth</label>
+                                        <input type="date" id="add-stu-dob" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Department</label>
+                                        <select id="add-stu-dept" class="form-control" required>
+                                            <option value="AIML(Artificial Intelligence And Machine Learning)">Artificial Intelligence And Machine Learning (AIML)</option>
+                                            <option value="CSE(Computer Science and Engineering)">Computer Science and Engineering (CSE)</option>
+                                            <option value="IT(Information Technology)">Information Technology (IT)</option>
+                                            <option value="ECE(Electronics and Communication Engineering)">Electronics and Communication Engineering (ECE)</option>
+                                            <option value="EEE(Electrical and Electronics Engineering)">Electrical and Electronics Engineering (EEE)</option>
+                                            <option value="MECH(Mechanical Engineering)">Mechanical Engineering (MECH)</option>
+                                            <option value="CIVIL(Civil Engineering)">Civil Engineering (CIVIL)</option>
+                                            <option value="AERO(Aeronautical Engineering)">Aeronautical Engineering (AERO)</option>
+                                            <option value="AUTO(Automobile Engineering)">Automobile Engineering (AUTO)</option>
+                                            <option value="BME(Biomedical Engineering)">Biomedical Engineering (BME)</option>
+                                            <option value="CHEM(Chemical Engineering)">Chemical Engineering (CHEM)</option>
+                                            <option value="AIDS(Artificial Intelligence and Data Science)">Artificial Intelligence and Data Science (AIDS)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Semester</label>
+                                        <input type="number" id="add-stu-sem" class="form-control" value="4" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Year</label>
+                                        <input type="number" id="add-stu-year" class="form-control" value="2" required placeholder="e.g. 1, 2, 3, 4">
+                                    </div>
+                                </div>
+                                <div class="flex" style="gap: 1rem;">
+                                    <button type="submit" class="btn btn-primary">Save Student</button>
+                                    <button type="button" class="btn" style="background: var(--bg);" onclick="toggleAddStudentForm()">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Roll Number</th>
+                                        <th>Name</th>
+                                        <th>Department</th>
+                                        <th>Sem</th>
+                                        <th>DOB</th>
+                                        <th style="width: 80px; text-align: center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-students-table">
+                                    <!-- JS populated -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel: Add Result -->
+                <div id="admin-panel-add" class="admin-panel hidden">
+                    <h2 style="margin-bottom: 1.5rem;">Add / Update Result</h2>
+                    <div class="card">
+                        <form id="add-result-form">
+                            <div class="grid gap-2" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.5rem;">
+                                <div class="form-group">
+                                    <label>Select Department</label>
+                                    <select id="ar-dept" class="form-control">
+                                        <option value="">-- All Departments --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Select Student</label>
+                                    <select id="ar-student" class="form-control" required>
+                                        <option value="">-- Select Student --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Semester</label>
+                                    <input type="number" id="ar-sem" class="form-control" readonly>
+                                </div>
+                            </div>
+
+                            <h4 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Enter Subject Marks</h4>
+                            
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th style="width:120px">Internal (20)</th>
+                                            <th style="width:120px">External (80)</th>
+                                            <th style="width:100px">Total</th>
+                                            <th style="width:80px">Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ar-marks-table">
+                                        <!-- JS populated based on subjects -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="flex" style="margin-top: 2rem;">
+                                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">Save Result</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Panel: View Results -->
+                <div id="admin-panel-results" class="admin-panel hidden">
+                    <h2 style="margin-bottom: 1.5rem;">Published Results</h2>
+                    <div class="card">
+                        <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+                            <div class="flex items-center gap-1">
+                                <label style="font-weight: 500; font-size: 0.9rem;">Filter by Dept:</label>
+                                <select id="filter-results-dept" class="form-control" style="max-width: 250px;" onchange="renderResultsTable()">
+                                    <option value="">-- All Departments --</option>
+                                    <option value="AIML(Artificial Intelligence And Machine Learning)">AIML</option>
+                                    <option value="CSE(Computer Science and Engineering)">CSE</option>
+                                    <option value="IT(Information Technology)">IT</option>
+                                    <option value="ECE(Electronics and Communication Engineering)">ECE</option>
+                                    <option value="EEE(Electrical and Electronics Engineering)">EEE</option>
+                                    <option value="MECH(Mechanical Engineering)">MECH</option>
+                                    <option value="CIVIL(Civil Engineering)">CIVIL</option>
+                                </select>
+                            </div>
+                            <button class="btn" onclick="renderResultsTable()">🔄 Refresh</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Roll No</th>
+                                        <th>Name</th>
+                                        <th>Dept</th>
+                                        <th>Semester</th>
+                                        <th>CGPA</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-results-table">
+                                    <!-- JS populated -->
+                                </tbody>
+                            </table>
+                            <div id="admin-no-results" class="hidden text-center" style="padding: 2rem; color: var(--text-muted);">
+                                No results published yet.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </section>
+
+    <!-- PRINT VIEW (Only visible when printing) -->
+    <div id="print-view" class="print-only">
+        <div class="print-header">
+            <h1>Global Institute of Technology</h1>
+            <p>Affiliated to State University | Accredited A+ Grade</p>
+            <h3 style="margin-top:1rem; text-decoration: underline;">Semester Grade Report</h3>
+        </div>
+
+        <div class="student-details-grid">
+            <div><b>Name:</b> <span id="p-name"></span></div>
+            <div><b>Roll No:</b> <span id="p-roll"></span></div>
+            <div><b>Course:</b> B.Tech</div>
+            <div><b>Department:</b> <span id="p-dept"></span></div>
+            <div><b>Semester:</b> <span id="p-sem"></span></div>
+            <div><b>Academic Year:</b> <span id="p-year"></span></div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject Code</th>
+                    <th>Subject Name</th>
+                    <th>Internal Marks</th>
+                    <th>External Marks</th>
+                    <th>Total Marks</th>
+                    <th>Grade</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody id="p-marks-table"></tbody>
+        </table>
+
+        <div style="margin-top: 2rem; border: 1px solid #000; padding: 1rem; display: flex; justify-content: space-between;">
+            <div><b>Total SGPA:</b> <span id="p-cgpa"></span></div>
+            <div><b>Final Result:</b> <span id="p-status"></span></div>
+        </div>
+
+        <div style="margin-top: 3rem; font-size: 12px;">
+            <h4>Grade Legend:</h4>
+            <p>O (90-100) Outstanding = 10 pt | A+ (80-89) Excellent = 9 pt | A (70-79) Very Good = 8 pt <br>
+               B+ (60-69) Good = 7 pt | B (50-59) Average = 6 pt | C (40-49) Pass = 5 pt | U (<40) Fail = 0 pt</p>
+        </div>
+        
+        <div style="margin-top: 4rem; display: flex; justify-content: space-between; font-weight: bold;">
+            <div>___________________<br><br>Prepared By</div>
+            <div>___________________<br><br>Controller of Examinations</div>
+        </div>
+    </div>
+
+
+    <script>
+        // API CONFIG
+        const API_URL = 'http://localhost:5000/api';
+        
+        const coreSubjects = [
+            { code: "CS601", name: "DBMS" },
+            { code: "CS602", name: "Operating Systems" },
+            { code: "CS603", name: "Computer Networks" },
+            { code: "CS604", name: "Software Engineering" },
+            { code: "CS605", name: "Web Technology" },
+            { code: "CS606", name: "Machine Learning" }
+        ];
+
+        const aimlSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23116", name: "Mathematical Foundations for AI" },
+                { code: "GE23117", name: "Heritage of Tamils" },
+                { code: "PH23132", name: "Physics for Information Science" },
+                { code: "GE23131", name: "Programming using C" },
+                { code: "EE23233", name: "Basic Electrical and Electronics Engineering" },
+                { code: "GE23122", name: "Engineering Practices-Electrical and Electronics" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" }
+            ],
+            "2": [
+                { code: "MA23214", name: "Probability and Inferential Statistics" },
+                { code: "GE23217", name: "Tamil and Technology" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "IT23231", name: "Digital Principles and Computer Architecture" },
+                { code: "AI23231", name: "Principles of Artificial Intelligence" },
+                { code: "CS23231", name: "Data Structures" },
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "GE23121", name: "Engineering Practices-Civil and Mechanical" },
+                { code: "CS23221", name: "Python Programming Lab" }
+            ],
+            "3": [
+                { code: "MA23313", name: "Discrete Mathematics for AI" },
+                { code: "AI23331", name: "Fundamentals of Machine Learning" },
+                { code: "CS23331", name: "Design and Analysis of Algorithms" },
+                { code: "CS23332", name: "Database Management Systems" },
+                { code: "CS23333", name: "Object Oriented Programming using Java" },
+                { code: "MC23112", name: "Environmental Science and Engineering" }
+            ],
+            "4": [
+                { code: "OE-I", name: "Open Elective-I" },
+                { code: "MA23434", name: "Optimization Techniques for AI" },
+                { code: "AI23431", name: "Web Technology and Mobile Application" },
+                { code: "CS23431", name: "Operating Systems" },
+                { code: "CS23432", name: "Software Construction" },
+                { code: "GE23421", name: "Soft Skills - I" },
+                { code: "AI23421", name: "Internship" }
+            ],
+            "5": [
+                { code: "PE-I", name: "Professional Elective-I" },
+                { code: "OE-II", name: "Open Elective-II" },
+                { code: "AI23512", name: "Data Engineering" },
+                { code: "AI23531", name: "Deep Learning" },
+                { code: "AD23632", name: "Framework for Data and Visual Analytics" },
+                { code: "CS23532", name: "Computer Networks" },
+                { code: "AI23521", name: "Build and Deploy Machine Learning Applications" },
+                { code: "GE23521", name: "Soft Skills - II" }
+            ],
+            "6": [
+                { code: "PE-II", name: "Professional Elective - II" },
+                { code: "AI23611", name: "Secure Systems Engineering" },
+                { code: "AI23631", name: "Predictive and Prescriptive Analytics" },
+                { code: "AI23632", name: "Natural Language Processing" },
+                { code: "CS23634", name: "Fundamentals of Generative AI and Prompt Engineering" },
+                { code: "GE23627", name: "Design Thinking and Innovation" },
+                { code: "GE23621", name: "Problem Solving Techniques" }
+            ],
+            "7": [
+                { code: "PE-III", name: "Professional Elective - III" },
+                { code: "PE-IV", name: "Professional Elective - IV" },
+                { code: "AI23711", name: "Social and Ethical Issues in AI" },
+                { code: "AI23712", name: "Reinforcement Learning" },
+                { code: "IT23731", name: "Cloud and Big data Architecture" },
+                { code: "AI23721", name: "Project Phase-I" }
+            ],
+            "8": [
+                { code: "PE-V", name: "Professional Elective-V" },
+                { code: "PE-VI", name: "Professional Elective-VI" },
+                { code: "AI23821", name: "Project Phase-II" }
+            ]
+        };
+
+        const cseSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23111", name: "Linear Algebra and Calculus" },
+                { code: "GE23117", name: "Heritage of Tamils" },
+                { code: "GE23131", name: "Programming using C" },
+                { code: "EE23133", name: "Basic Electrical and Electronics Engineering" },
+                { code: "PH23132", name: "Physics for Information Science" },
+                { code: "GE23121", name: "Engineering Practices-Civil and Mechanical" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" }
+            ],
+            "2": [
+                { code: "MA23213", name: "Discrete Mathematical Structures" },
+                { code: "GE23217", name: "Tamils and Technology" },
+                { code: "EC23232", name: "Digital Logic and Microprocessor" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "CS23231", name: "Data Structures" },
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "GE23122", name: "Engineering Practices- Electrical and Electronics" },
+                { code: "CS23221", name: "Python Programming Lab" },
+                { code: "MC23112", name: "Environmental Science and Engineering" }
+            ],
+            "3": [
+                { code: "MA23312", name: "Fourier Series and Number Theory" },
+                { code: "CS23311", name: "Computer Architecture" },
+                { code: "CS23331", name: "Design and Analysis of Algorithms" },
+                { code: "CS23332", name: "Database Management Systems" },
+                { code: "CS23333", name: "Object Oriented Programming Using Java" },
+                { code: "CS23334", name: "Fundamentals of Data Science" }
+            ],
+            "4": [
+                { code: "OE-I", name: "Open Elective - I" },
+                { code: "PE-I", name: "Professional Elective-I" },
+                { code: "MA23435", name: "Probability, Statistics and Simulation" },
+                { code: "CS23431", name: "Operating Systems" },
+                { code: "CS23432", name: "Software Construction" },
+                { code: "GE23627", name: "Design Thinking and Innovation" },
+                { code: "GE23421", name: "Soft Skills-I" },
+                { code: "CS23421", name: "Internship (2 weeks)" }
+            ],
+            "5": [
+                { code: "CS23511", name: "Theory of Computation" },
+                { code: "CS23512", name: "Fundamentals of Mobile Computing" },
+                { code: "PE-II", name: "Professional Elective-II" },
+                { code: "CS23531", name: "Web Programming" },
+                { code: "CS23532", name: "Computer Networks" },
+                { code: "CS23533", name: "Foundations of Artificial Intelligence" },
+                { code: "GE23521", name: "Soft Skills-II" }
+            ],
+            "6": [
+                { code: "CS23631", name: "Compiler Design" },
+                { code: "CS23632", name: "Cryptography and Network Security" },
+                { code: "CS23633", name: "Cloud Computing" },
+                { code: "CS23634", name: "Fundamentals of Generative AI and Prompt Engineering" },
+                { code: "AI23331", name: "Fundamentals of Machine Learning" },
+                { code: "CS23621", name: "Mobile Application Development Laboratory" },
+                { code: "GE23621", name: "Problem Solving Techniques" }
+            ],
+            "7": [
+                { code: "PE-III", name: "Professional Elective-III" },
+                { code: "PE-IV", name: "Professional Elective-IV" },
+                { code: "PE-V", name: "Professional Elective-V" },
+                { code: "PE-VI", name: "Professional Elective-VI" },
+                { code: "OE-II", name: "Open Elective - II" },
+                { code: "CS23721", name: "Project Phase I" }
+            ],
+            "8": [
+                { code: "PE-VII", name: "Professional Elective-VII" },
+                { code: "CS23821", name: "Project Phase II" }
+            ]
+        };
+
+        const eeeSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23111", name: "Linear Algebra and Calculus" },
+                { code: "CY23131", name: "Chemistry for Electronics Engineering" },
+                { code: "GE23131", name: "Programming using C" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "GE23122", name: "Engineering Practices - Electrical and Electronics" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" },
+                { code: "GE23117", name: "Heritage of Tamils" }
+            ],
+            "2": [
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "MA23212", name: "Differential Equation and Complex Variables" },
+                { code: "PH23232", name: "Physics for Electronics Engineering" },
+                { code: "CS23231", name: "Data Structures" },
+                { code: "EE23212", name: "Electric Circuits" },
+                { code: "EE23221", name: "Electric Circuits Laboratory" },
+                { code: "GE23121", name: "Engineering Practices - Civil and Mechanical" },
+                { code: "MC23112", name: "Environmental Science and Engineering" },
+                { code: "GE23217", name: "Tamils and Technology" }
+            ],
+            "3": [
+                { code: "MA23312", name: "Fourier Series and Number Theory" },
+                { code: "EE23311", name: "Electromagnetic Theory" },
+                { code: "EE23312", name: "Electrical Machines - I" },
+                { code: "EE23313", name: "Measurements and Instrumentation" },
+                { code: "EE23314", name: "Electronic Devices and Circuits" },
+                { code: "EE23315", name: "Power Plant Engineering" },
+                { code: "EE23321", name: "Electronic Devices and Circuits Laboratory" },
+                { code: "CS23336", name: "Introduction to Python Programming" }
+            ],
+            "4": [
+                { code: "EE23411", name: "Electrical Machines - II" },
+                { code: "EE23412", name: "Transmission and Distribution" },
+                { code: "EE23431", name: "Digital Logic Circuits" },
+                { code: "EE23432", name: "Linear Integrated Circuits and Applications" },
+                { code: "OE-I", name: "Open Elective - I" },
+                { code: "EE23421", name: "Electrical Machines Laboratory" },
+                { code: "GE23421", name: "Soft Skills-I" },
+                { code: "CS23422", name: "Python Programming for Machine Learning" }
+            ],
+            "5": [
+                { code: "EE23511", name: "Power System Analysis" },
+                { code: "EE23512", name: "Power Electronics" },
+                { code: "EE23513", name: "Control Systems" },
+                { code: "PE-I", name: "Professional Elective I" },
+                { code: "EE23531", name: "Microprocessors, Microcontrollers and Applications" },
+                { code: "OE-II", name: "Open Elective - II" },
+                { code: "EE23521", name: "Control and Instrumentation Laboratory" },
+                { code: "GE23627", name: "Design Thinking and Innovation" },
+                { code: "GE23521", name: "Soft Skills-II" }
+            ],
+            "6": [
+                { code: "EE23611", name: "Protection and Switchgear" },
+                { code: "EE23612", name: "Solid State Drives" },
+                { code: "EE23613", name: "Electric Energy Utilization and Conservation" },
+                { code: "EE23631", name: "Applications of IoT in Electrical Engineering" },
+                { code: "PE-II", name: "Professional Elective II" },
+                { code: "PE-III", name: "Professional Elective III" },
+                { code: "EE23621", name: "Power Electronics and Drives Laboratory" },
+                { code: "EE23622", name: "Applications of AI and ML in Electrical Engineering" },
+                { code: "GE23621", name: "Problem Solving Techniques" }
+            ],
+            "7": [
+                { code: "EE23711", name: "Smart Grid" },
+                { code: "EE23712", name: "Power System Operation and Control" },
+                { code: "EE23731", name: "Renewable Energy Systems" },
+                { code: "PE-IV", name: "Professional Elective IV" },
+                { code: "EE23721", name: "Power System Simulation Laboratory" },
+                { code: "EE23722", name: "Project Work Phase I" },
+                { code: "EE23723", name: "Internship" }
+            ],
+            "8": [
+                { code: "PE-V", name: "Professional Elective V" },
+                { code: "PE-VI", name: "Professional Elective VI" },
+                { code: "EE23821", name: "Project Work Phase II" }
+            ]
+        };
+
+        const eceSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "GE23117", name: "Heritage of Tamils" },
+                { code: "MA23111", name: "Linear Algebra and Calculus" },
+                { code: "EC23131", name: "Electron Devices" },
+                { code: "CY23131", name: "Chemistry for Electronics Engineering" },
+                { code: "GE23131", name: "Programming using C" },
+                { code: "GE23122", name: "Engineering Practices-Electrical and Electronics" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" }
+            ],
+            "2": [
+                { code: "MA23212", name: "Differential Equations and Complex Variables" },
+                { code: "GE23217", name: "Tamils and Technology" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "EE23132", name: "Basic Electrical Engineering" },
+                { code: "PH23232", name: "Physics for Electronics Engineering" },
+                { code: "CS23231", name: "Data Structures" },
+                { code: "GE23121", name: "Engineering Practices-Civil and Mechanical" },
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "MC23112", name: "Environmental Science and Engineering" }
+            ],
+            "3": [
+                { code: "MA23312", name: "Fourier Series and Number Theory" },
+                { code: "EC23311", name: "Analog Circuits-I" },
+                { code: "EC23312", name: "Electromagnetic Fields" },
+                { code: "EC23313", name: "Digital Principles and System Design" },
+                { code: "EC23332", name: "Principles of Microprocessor and Microcontrollers" },
+                { code: "CS23336", name: "Introduction to Python Programming" },
+                { code: "EC23321", name: "Analog and Digital Circuits Laboratory" }
+            ],
+            "4": [
+                { code: "EC23411", name: "Signals and Systems" },
+                { code: "EC23412", name: "Transmission Lines and Waveguides" },
+                { code: "EC23413", name: "Communication Theory" },
+                { code: "EC23431", name: "Analog Circuits-II" },
+                { code: "MA23436", name: "Probability and Random Processes" },
+                { code: "GE23421", name: "Soft Skills-I" },
+                { code: "CS23422", name: "Python Programming for Machine Learning" }
+            ],
+            "5": [
+                { code: "EC23511", name: "Control System Engineering" },
+                { code: "EC23512", name: "Modern Digital Communication" },
+                { code: "OE-I", name: "Open Elective-I" },
+                { code: "PE-I", name: "Professional Elective-I" },
+                { code: "PE-II", name: "Professional Elective-II" },
+                { code: "EC23531", name: "Digital Signal Processing" },
+                { code: "EC23521", name: "Communication Systems Laboratory" },
+                { code: "EC23522", name: "Internship" },
+                { code: "GE23521", name: "Soft Skills-II" }
+            ],
+            "6": [
+                { code: "EC23611", name: "Antenna Theory and Wave Propagation" },
+                { code: "OE-II", name: "Open Elective-II" },
+                { code: "EC23631", name: "VLSI and Chip Design" },
+                { code: "EC23632", name: "Communication Networks" },
+                { code: "EC23633", name: "Wireless Communication" },
+                { code: "GE23621", name: "Problem Solving Techniques" },
+                { code: "GE23627", name: "Design Thinking and Innovation" }
+            ],
+            "7": [
+                { code: "PE-III", name: "Professional Elective-III" },
+                { code: "PE-IV", name: "Professional Elective-IV" },
+                { code: "EC23731", name: "Optical Communication and Networks" },
+                { code: "EC23732", name: "RF and Microwave Engineering" },
+                { code: "EC23733", name: "Embedded and Real Time Systems" },
+                { code: "EC23721", name: "Artificial Intelligence and Machine Learning for Electronic Engineering" }
+            ],
+            "8": [
+                { code: "PE-V", name: "Professional Elective-V" },
+                { code: "PE-VI", name: "Professional Elective-VI" },
+                { code: "EC23821", name: "Project work" }
+            ]
+        };
+
+        const mechSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23112", name: "Algebra and Calculus" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "EC23111", name: "Basic Electronics Engineering" },
+                { code: "GE23117", name: "Heritage of Tamils" },
+                { code: "PH23131", name: "Physics of Materials" },
+                { code: "GE23121", name: "Engineering Practices - Civil and Mechanical" },
+                { code: "MC23112", name: "Environmental Science and Engineering" }
+            ],
+            "2": [
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "MA23212", name: "Differential Equations and Complex variables" },
+                { code: "GE23211", name: "Engineering Mechanics" },
+                { code: "GE23217", name: "Tamils and Technology" },
+                { code: "CY23233", name: "Engineering Chemistry" },
+                { code: "EE23132", name: "Basic Electrical Engineering" },
+                { code: "GE23233", name: "Problem solving and Python Programming" },
+                { code: "GE23122", name: "Engineering Practices - Electrical and Electronics" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" }
+            ],
+            "3": [
+                { code: "ME23311", name: "Engineering Thermodynamics" },
+                { code: "ME23312", name: "Manufacturing Technology I" },
+                { code: "ME23313", name: "Kinematics of Machinery" },
+                { code: "MA23331", name: "Transforms and Statistics" },
+                { code: "ME23331", name: "Strength of Materials" },
+                { code: "ME23321", name: "Manufacturing Technology Laboratory I" },
+                { code: "CS23422", name: "Python Programming for Machine learning" }
+            ],
+            "4": [
+                { code: "ME23411", name: "Engineering Materials and Metallurgy" },
+                { code: "ME23412", name: "Manufacturing Technology II" },
+                { code: "ME23431", name: "Dynamics of Machines" },
+                { code: "ME23432", name: "Fluid Mechanics and Machinery" },
+                { code: "ME23433", name: "Thermal Engineering" },
+                { code: "GE23421", name: "Soft Skills - I" },
+                { code: "ME23421", name: "Machine Drawing Laboratory" },
+                { code: "ME23422", name: "Manufacturing Technology Laboratory II" }
+            ],
+            "5": [
+                { code: "GE23511", name: "Economics for Engineers" },
+                { code: "ME23511", name: "Machine Design" },
+                { code: "PE-I", name: "Professional Elective-I" },
+                { code: "OE-I", name: "Open Elective - I" },
+                { code: "ME23531", name: "Heat and Mass Transfer" },
+                { code: "ME23532", name: "Metrology and Measurements" },
+                { code: "GE23521", name: "Soft Skills - II" },
+                { code: "ME23521", name: "Component Modeling Laboratory" },
+                { code: "ME23522", name: "Internship" }
+            ],
+            "6": [
+                { code: "ME23611", name: "Additive Manufacturing Technologies" },
+                { code: "ME23612", name: "Design of Transmission systems" },
+                { code: "ME23613", name: "Finite Element Analysis" },
+                { code: "PE-II", name: "Professional Elective II" },
+                { code: "OE-II", name: "Open Elective - II" },
+                { code: "ME23631", name: "Robotics and CNC Programming" },
+                { code: "GE23621", name: "Problem Solving Techniques" },
+                { code: "ME23622", name: "Simulation and Analysis Laboratory" },
+                { code: "GE23627", name: "Design Thinking and Innovation" }
+            ],
+            "7": [
+                { code: "ME23711", name: "Process Planning and Cost Estimation" },
+                { code: "ME23712", name: "Total Quality Management" },
+                { code: "PE-III", name: "Professional Elective III" },
+                { code: "PE-IV", name: "Professional Elective IV" },
+                { code: "ME23731", name: "Artificial Intelligence for Mechanical Engineers" },
+                { code: "ME23732", name: "Mechatronics" },
+                { code: "ME23721", name: "Project Work Phase I" },
+                { code: "ME23722", name: "Comprehension" }
+            ],
+            "8": [
+                { code: "PE-V", name: "Professional Elective V" },
+                { code: "ME23821", name: "Project Work Phase II" }
+            ]
+        };
+
+        const civilSubjects = {
+            "1": [
+                { code: "GE23117", name: "Heritage of Tamils" },
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23112", name: "Algebra and Calculus" },
+                { code: "CE23111", name: "Building Materials" },
+                { code: "CE23112", name: "Engineering Drawing for Civil Engineers" },
+                { code: "PH23131", name: "Physics of Materials" },
+                { code: "GE23121", name: "Engineering Practices - Civil and Mechanical" },
+                { code: "MC23112", name: "Environmental Science and Engineering" }
+            ],
+            "2": [
+                { code: "GE23217", name: "Tamils and Technology" },
+                { code: "MA23212", name: "Differential Equations and Complex Variables" },
+                { code: "GE23211", name: "Engineering Mechanics" },
+                { code: "CY23233", name: "Engineering Chemistry" },
+                { code: "EE23133", name: "Basic Electrical and Electronics Engineering" },
+                { code: "GE23231", name: "Programming Using Python" },
+                { code: "CE23221", name: "Computer Aided Building Drawing for Civil Engineers" },
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "GE23122", name: "Engineering Practices - Electrical and Electronics" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" }
+            ],
+            "3": [
+                { code: "CE23311", name: "Strength of Materials I" },
+                { code: "CE23312", name: "Fluid Mechanics" },
+                { code: "CE23313", name: "Construction Techniques, Equipment and Practice" },
+                { code: "CE23331", name: "Surveying" },
+                { code: "MA23331", name: "Transforms and Statistics" },
+                { code: "CE23321", name: "Construction Materials Laboratory" },
+                { code: "CS23422", name: "Python Programming for Machine Learning" }
+            ],
+            "4": [
+                { code: "CE23411", name: "Strength of Materials II" },
+                { code: "CE23412", name: "Hydraulics and Irrigation Structures" },
+                { code: "CE23413", name: "Water Supply Engineering" },
+                { code: "CE23414", name: "Highway and Railway Engineering" },
+                { code: "CE23431", name: "Soil Mechanics" },
+                { code: "OE-I", name: "Open Elective I" },
+                { code: "CE23421", name: "Strength of Materials and Hydraulic Engineering Laboratory" },
+                { code: "GE23421", name: "Soft Skills - I" }
+            ],
+            "5": [
+                { code: "CE23511", name: "Design of Reinforced Concrete Elements" },
+                { code: "CE23512", name: "Foundation Engineering" },
+                { code: "CE23513", name: "Waste Water Engineering" },
+                { code: "CE23531", name: "Structural Analysis" },
+                { code: "PE-I", name: "Professional Elective I" },
+                { code: "OE-II", name: "Open Elective - II" },
+                { code: "CE23521", name: "Water and Waste Water Analysis Laboratory" },
+                { code: "CE23522", name: "Survey Camp" },
+                { code: "GE23521", name: "Soft Skills - II" }
+            ],
+            "6": [
+                { code: "CE23611", name: "Design of Steel Structures" },
+                { code: "CE23612", name: "Construction, Planning, Scheduling and Management" },
+                { code: "CE23613", name: "Structural Dynamics and Earthquake Engineering" },
+                { code: "PE-II", name: "Professional Elective II" },
+                { code: "CE23631", name: "Structural Design and Drawing" },
+                { code: "GE23621", name: "Problem Solving Techniques" },
+                { code: "GE23627", name: "Design Thinking and Innovation" }
+            ],
+            "7": [
+                { code: "CE23711", name: "Estimation, Costing and Valuation Engineering" },
+                { code: "CE23712", name: "Hydrology" },
+                { code: "PE-III", name: "Professional Elective III" },
+                { code: "PE-IV", name: "Professional Elective IV" },
+                { code: "CE23721", name: "Building Information Modelling" },
+                { code: "CE23722", name: "Design Project" },
+                { code: "CE23723", name: "Artificial Intelligence and Machine Learning for Civil Engineers" },
+                { code: "CE23724", name: "Internship" }
+            ],
+            "8": [
+                { code: "PE-V", name: "Professional Elective V" },
+                { code: "PE-VI", name: "Professional Elective VI" },
+                { code: "CE23821", name: "Project Work" }
+            ]
+        };
+
+        const itSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23111", name: "Linear Algebra and Calculus" },
+                { code: "GE23117", name: "Heritage of Tamils" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "EE23133", name: "Basic Electrical and Electronics Engineering" },
+                { code: "GE23131", name: "Programming using C" },
+                { code: "GE23122", name: "Engineering Practices-Electrical and Electronics" },
+                { code: "MC23112", name: "Environmental Science and Engineering" }
+            ],
+            "2": [
+                { code: "MA23213", name: "Discrete Mathematical Structures" },
+                { code: "GE23217", name: "Tamils and Technology" },
+                { code: "PH23132", name: "Physics for Information Science" },
+                { code: "EC23331", name: "Microprocessors and Microcontroller" },
+                { code: "CS23231", name: "Data Structures" },
+                { code: "GE23121", name: "Engineering Practices-Civil and Mechanical" },
+                { code: "CS23221", name: "Python Programming Lab" },
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" }
+            ],
+            "3": [
+                { code: "MA23312", name: "Fourier Series and Number Theory" },
+                { code: "EC23314", name: "Analog and Digital Communication" },
+                { code: "CS23331", name: "Design and Analysis of Algorithms" },
+                { code: "CS23332", name: "Database Management Systems" },
+                { code: "CS23333", name: "Object Oriented Programming using Java" },
+                { code: "IT23331", name: "Digital Logic and Computer Architecture" }
+            ],
+            "4": [
+                { code: "GE23411", name: "Organizational Management for Engineers" },
+                { code: "OE-I", name: "Open Elective - I" },
+                { code: "MA23435", name: "Probability, Statistics and Simulation" },
+                { code: "CS23431", name: "Operating Systems" },
+                { code: "CS23432", name: "Software Construction" },
+                { code: "IT23431", name: "MongoDB Essentials" },
+                { code: "GE23421", name: "Soft Skills - I" },
+                { code: "IT23421", name: "Internship" }
+            ],
+            "5": [
+                { code: "PE-I", name: "Professional Elective - I" },
+                { code: "IT23511", name: "Automata Theory and Compiler Design" },
+                { code: "IT23531", name: "Computer Vision" },
+                { code: "CS23531", name: "Web Programming" },
+                { code: "AI23231", name: "Principles of Artificial Intelligence" },
+                { code: "CS23532", name: "Computer Networks" },
+                { code: "GE23521", name: "Soft Skills - II" }
+            ],
+            "6": [
+                { code: "PE-II", name: "Professional Elective - II" },
+                { code: "OE-II", name: "Open Elective - II" },
+                { code: "CS23512", name: "Fundamentals of Mobile Computing" },
+                { code: "CS23632", name: "Cryptography and Network Security" },
+                { code: "AI23331", name: "Fundamentals of Machine Learning" },
+                { code: "GE23627", name: "Design Thinking and Innovation" },
+                { code: "CS23621", name: "Mobile Application Development Laboratory" },
+                { code: "GE23621", name: "Problem Solving Techniques" }
+            ],
+            "7": [
+                { code: "PE-III", name: "Professional Elective - III" },
+                { code: "PE-IV", name: "Professional Elective - IV" },
+                { code: "IT23731", name: "Cloud and Big Data Architecture" },
+                { code: "IT23721", name: "Data Science using R" },
+                { code: "IT23722", name: "Project Phase I" }
+            ],
+            "8": [
+                { code: "PE-V", name: "Professional Elective - V" },
+                { code: "PE-VI", name: "Professional Elective - VI" },
+                { code: "IT23821", name: "Project Phase II" }
+            ]
+        };
+
+        const aeroSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23112", name: "Algebra and Calculus" },
+                { code: "PH23131", name: "Physics of Materials" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "GE23117", name: "Heritage of Tamils" },
+                { code: "EE23133", name: "Basic Electrical and Electronics Engineering" },
+                { code: "MC23112", name: "Environmental Science and Engineering" },
+                { code: "GE23121", name: "Engineering Practices - Civil and Mechanical" }
+            ],
+            "2": [
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "MA23212", name: "Differential Equation and Complex variables" },
+                { code: "CY23233", name: "Engineering Chemistry" },
+                { code: "GE23211", name: "Engineering Mechanics" },
+                { code: "AE23211", name: "Fundamentals of Aerospace Engineering" },
+                { code: "GE23233", name: "Problem Solving and Python Programming" },
+                { code: "GE23217", name: "Tamils and Technology" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" },
+                { code: "GE23122", name: "Engineering Practices - Electrical and Electronics" }
+            ],
+            "3": [
+                { code: "MA23311", name: "Transforms and Applied Partial Differential Equations" },
+                { code: "AE23331", name: "Solid Mechanics" },
+                { code: "AE23332", name: "Fluid Mechanics and Fluid Machinery" },
+                { code: "AE23333", name: "Aero Engineering Thermodynamics" },
+                { code: "CS23422", name: "Python Programming for Machine Learning" },
+                { code: "OE-I", name: "Open elective - I" },
+                { code: "AE23321", name: "Computer Aided Modelling Laboratory" }
+            ],
+            "4": [
+                { code: "MA23432", name: "Statistics and Numerical Methods" },
+                { code: "AE23411", name: "Aircraft Structures - I" },
+                { code: "AE23412", name: "Control Engineering" },
+                { code: "AE23431", name: "Incompressible Aerodynamics" },
+                { code: "AE23432", name: "Aircraft Materials and Processes" },
+                { code: "AE23433", name: "Aircraft Systems and Instruments" },
+                { code: "GE23421", name: "Soft Skills - I" }
+            ],
+            "5": [
+                { code: "AE23511", name: "Aircraft Propulsion" },
+                { code: "AE23512", name: "Compressible Aerodynamics" },
+                { code: "AE23513", name: "Flight Dynamics" },
+                { code: "AE23531", name: "Aircraft Structures - II" },
+                { code: "PE-I", name: "Professional Elective - I" },
+                { code: "OE-II", name: "Open Elective - II" },
+                { code: "GE23521", name: "Soft Skills - II" },
+                { code: "AE23521", name: "Computational Simulation Laboratory" },
+                { code: "AE23522", name: "Internship" }
+            ],
+            "6": [
+                { code: "AE23611", name: "Rocket and Missile Propulsion" },
+                { code: "AE23631", name: "Flight Vehicle Design" },
+                { code: "PE-II", name: "Professional Elective - II" },
+                { code: "PE-III", name: "Professional Elective - III" },
+                { code: "GE23627", name: "Design Thinking and Innovation" },
+                { code: "AE23622", name: "Jet propulsion Laboratory" },
+                { code: "AE23623", name: "Airframe Repair and Aero Engine Laboratory" },
+                { code: "GE23621", name: "Problem Solving Techniques" }
+            ],
+            "7": [
+                { code: "AE23731", name: "Avionics" },
+                { code: "AE23711", name: "Composite Materials and Structures" },
+                { code: "GE23311", name: "Fundamentals of Management for Engineers" },
+                { code: "PE-IV", name: "Professional Elective - IV" },
+                { code: "PE-V", name: "Professional Elective - V" },
+                { code: "AE23721", name: "Project Work Phase I" },
+                { code: "AE23722", name: "Artificial Intelligence and Machine Learning for Aeronautical Engineering" }
+            ],
+            "8": [
+                { code: "PE-VI", name: "Professional Elective VI" },
+                { code: "AE23821", name: "Project Work Phase II" }
+            ]
+        };
+
+        const autoSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23112", name: "Algebra and Calculus" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "AT23111", name: "Production Technology - I" },
+                { code: "GE23117", name: "Heritage of Tamils" },
+                { code: "PH23131", name: "Physics of Materials" },
+                { code: "GE23121", name: "Engineering Practices - Civil and Mechanical" },
+                { code: "MC23112", name: "Environmental Science and Engineering" }
+            ],
+            "2": [
+                { code: "MA23212", name: "Differential Equations and Complex Variables" },
+                { code: "GE23211", name: "Engineering Mechanics" },
+                { code: "GE23217", name: "Tamils and Technology" },
+                { code: "CY23233", name: "Engineering Chemistry" },
+                { code: "EE23133", name: "Basic Electrical and Electronics Engineering" },
+                { code: "GE23231", name: "Programming Using Python" },
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "GE23122", name: "Engineering Practices - Electrical and Electronics" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" }
+            ],
+            "3": [
+                { code: "MA23331", name: "Transforms and Statistics" },
+                { code: "AT23331", name: "Automotive Engines" },
+                { code: "AT23332", name: "Applied Thermodynamics" },
+                { code: "AT23333", name: "Strength of Materials for Automobile Engineers" },
+                { code: "AT23334", name: "Production Technology - II" },
+                { code: "AT23321", name: "Computer Aided Machine Drawing Laboratory" }
+            ],
+            "4": [
+                { code: "AT23411", name: "Electric and Hybrid Vehicles - I" },
+                { code: "AT23412", name: "Material Science and Metallurgy" },
+                { code: "AT23431", name: "Automotive Drive Line and Chassis" },
+                { code: "AT23432", name: "Fluid Mechanics and Machinery for Automobile Engineers" },
+                { code: "AT23433", name: "Theory of Machines" },
+                { code: "CS23422", name: "Python Programming for Machine Learning" },
+                { code: "GE23421", name: "Soft Skills - I" }
+            ],
+            "5": [
+                { code: "AT23511", name: "Design of Machine Elements" },
+                { code: "GE23311", name: "Fundamentals of Management for Engineers" },
+                { code: "PE-I", name: "Professional Elective - I" },
+                { code: "OE-I", name: "Open Elective - I" },
+                { code: "AT23531", name: "Automotive Electrical and Electronics" },
+                { code: "AT23532", name: "Electric and Hybrid Vehicles - II" },
+                { code: "AT23521", name: "Two and Three wheelers Laboratory" },
+                { code: "AT23522", name: "Computer Aided Vehicle Design Data Characteristics Laboratory" },
+                { code: "GE23521", name: "Soft Skills - II" }
+            ],
+            "6": [
+                { code: "PE-II", name: "Professional Elective - II" },
+                { code: "OE-II", name: "Open Elective - II" },
+                { code: "AT23631", name: "Automotive System Design" },
+                { code: "AT23632", name: "Vehicle Dynamics" },
+                { code: "AT23633", name: "Automotive Fuels and Lubricants" },
+                { code: "GE23621", name: "Problem Solving Techniques" },
+                { code: "GE23627", name: "Design Thinking and Innovation" }
+            ],
+            "7": [
+                { code: "AT23711", name: "Automotive Pollution and Control" },
+                { code: "AT23712", name: "Intelligent Vehicle System" },
+                { code: "AT23713", name: "Automotive Safety" },
+                { code: "PE-III", name: "Professional Elective - III" },
+                { code: "AT23721", name: "AI and ML for Automobile Engineers" },
+                { code: "AT23722", name: "Vehicle Maintenance Laboratory" },
+                { code: "AT23723", name: "Computer Aided Analysis laboratory" },
+                { code: "AT23724", name: "Internship" }
+            ],
+            "8": [
+                { code: "PE-IV", name: "Professional Elective IV" },
+                { code: "PE-V", name: "Professional Elective V" },
+                { code: "AT23821", name: "Project Work Phase II" }
+            ]
+        };
+
+        const bmeSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23111", name: "Linear Algebra and Calculus" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "GE23117", name: "Heritage of Tamils" },
+                { code: "MC23112", name: "Environmental Science and Engineering" },
+                { code: "CY23131", name: "Chemistry For Electronics Engineering" },
+                { code: "GE23121", name: "Engineering Practices - Civil and Mechanical" }
+            ],
+            "2": [
+                { code: "MA23212", name: "Differential Equations and Complex Variables" },
+                { code: "ME23211", name: "Engineering Mechanics for Biomedical Engineers" },
+                { code: "GE23217", name: "Tamils Technology" },
+                { code: "CS23232", name: "Fundamentals of Data Structures using C" },
+                { code: "PH23231", name: "Physics for Bioscience" },
+                { code: "BM23231", name: "Electric Circuits and Machines" },
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "GE23122", name: "Engineering Practices - Electrical and Electronics" }
+            ],
+            "3": [
+                { code: "MA23312", name: "Fourier series and Number theory" },
+                { code: "BM23311", name: "Human Anatomy and Physiology" },
+                { code: "BM23312", name: "Biomedical Instrumentation" },
+                { code: "BM23313", name: "Biochemical Science" },
+                { code: "BM23331", name: "Electronic Devices and Circuits" },
+                { code: "BM23332", name: "Sensors and Measurements" },
+                { code: "BM23321", name: "Biochemistry and Physiology Laboratory" },
+                { code: "BM23322", name: "Biomedical Instrumentation Laboratory" }
+            ],
+            "4": [
+                { code: "BM23411", name: "Analog and Digital Integrated Circuits" },
+                { code: "BM23412", name: "Communication Systems and Standards" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" },
+                { code: "OE 1", name: "Open Elective 1" },
+                { code: "MA23436", name: "Probability and Random Processes" },
+                { code: "BM23431", name: "Pathology and Microbiology" },
+                { code: "CS23336", name: "Introduction to Python Programming" },
+                { code: "BM23421", name: "Analog and Digital Integrated Circuits Laboratory" },
+                { code: "BM23422", name: "PCB Design Laboratory" },
+                { code: "GE23421", name: "Soft Skills-I" }
+            ],
+            "5": [
+                { code: "BM23511", name: "Biocontrol systems" },
+                { code: "BM23512", name: "Diagnostic and Therapeutic Equipment" },
+                { code: "OE 2", name: "Open Elective 2" },
+                { code: "PE 1", name: "Professional Elective 1" },
+                { code: "BM23531", name: "Signals and Systems Analysis" },
+                { code: "BM23532", name: "Microcontroller and Embedded System Design" },
+                { code: "CS23422", name: "Python Programming for Machine learning" },
+                { code: "BM23521", name: "Diagnostic and Therapeutic Equipment Laboratory" },
+                { code: "GE23521", name: "Soft Skills - II" }
+            ],
+            "6": [
+                { code: "BM23611", name: "Radiological Equipment" },
+                { code: "BM23612", name: "Biomechanics" },
+                { code: "PE 2", name: "Professional Elective 2" },
+                { code: "PE 3", name: "Professional Elective 3" },
+                { code: "BM23631", name: "Biosignal Processing" },
+                { code: "BM23632", name: "Physiological Modeling Laboratory" },
+                { code: "GE23627", name: "Design Thinking and Innovation" },
+                { code: "BM23621", name: "Medical Industrial Training" },
+                { code: "GE23621", name: "Problem solving techniques" }
+            ],
+            "7": [
+                { code: "BM23711", name: "Comprehension In Biomedical Engineering" },
+                { code: "PE 4", name: "Professional Elective 4" },
+                { code: "PE 5", name: "Professional Elective 5" },
+                { code: "PE 6", name: "Professional Elective 6" },
+                { code: "BM23731", name: "Medical Image Processing" },
+                { code: "BM23721", name: "Artificial Intelligence and Machine learning for Biomedical Engineering" },
+                { code: "BM23722", name: "Project Phase-I" },
+                { code: "BM23723", name: "Hospital Training" }
+            ],
+            "8": [
+                { code: "BM23821", name: "Project Phase-II" }
+            ]
+        };
+
+        const chemSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23112", name: "Algebra and Calculus" },
+                { code: "PH23111", name: "Physics for Chemical Engineering" },
+                { code: "CY23132", name: "Chemistry for Technologists" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "GE23121", name: "Engineering Practices-Civil and Mechanical" },
+                { code: "MC23112", name: "Environmental Science and Engineering" },
+                { code: "GE23117", name: "Heritage of Tamils" }
+            ],
+            "2": [
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "MA23212", name: "Differential Equations and Complex Variables" },
+                { code: "CH23211", name: "Introduction to Chemical Engineering" },
+                { code: "GE23233", name: "Problem Solving and Python Programming" },
+                { code: "PH23233", name: "Material Science" },
+                { code: "EE23133", name: "Basic Electrical and Electronics Engineering" },
+                { code: "GE23122", name: "Engineering Practices - Electrical and Electronics" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" },
+                { code: "GE23217", name: "Tamils and Technology" }
+            ],
+            "3": [
+                { code: "MA23311", name: "Transforms and Applied Partial differential equations" },
+                { code: "CY23334", name: "Physical and Organic Chemistry" },
+                { code: "CH23311", name: "Solid Mechanics" },
+                { code: "CH23312", name: "Chemical Process Calculations" },
+                { code: "CH23313", name: "Chemical Process Industries" },
+                { code: "CH23331", name: "Fluid Mechanics for Chemical Engineers" }
+            ],
+            "4": [
+                { code: "MA23431", name: "Probability, Statistics and Reliability" },
+                { code: "CH23411", name: "Thermodynamics" },
+                { code: "CH23412", name: "Heat Transfer" },
+                { code: "CH23431", name: "Particle science and Technology" },
+                { code: "OE-I", name: "Open Elective - I" },
+                { code: "CS23422", name: "Python Programming for Machine Learning" },
+                { code: "GE23421", name: "SOFT SKILLS - I" },
+                { code: "CH23421", name: "Technical Analysis Lab" },
+                { code: "CH23522", name: "Industrial Training" }
+            ],
+            "5": [
+                { code: "CH23511", name: "Process Plant Utilities" },
+                { code: "CH23512", name: "Chemical Engineering Thermodynamics" },
+                { code: "CH23513", name: "Mass Transfer I" },
+                { code: "CH23514", name: "Chemical Reaction Engineering - I" },
+                { code: "PE-I", name: "Professional Elective I" },
+                { code: "OE-II", name: "Open Elective - II" },
+                { code: "GE23521", name: "SOFT SKILLS - II" },
+                { code: "CH23521", name: "Heat Transfer Lab" },
+                { code: "EC23527", name: "Microfluidics Laboratory" },
+                { code: "CH23522", name: "Industrial Training" }
+            ],
+            "6": [
+                { code: "CH23611", name: "Mass Transfer II" },
+                { code: "CH23612", name: "Chemical Reaction Engineering - II" },
+                { code: "CH23613", name: "Process Control and Instrumentation" },
+                { code: "CH23614", name: "Process Equipment Design" },
+                { code: "PE-II", name: "Professional Elective II" },
+                { code: "GE23621", name: "Problem Solving Techniques" },
+                { code: "CH23621", name: "Mass Transfer Lab" },
+                { code: "GE23627", name: "Design thinking and Innovation" }
+            ],
+            "7": [
+                { code: "CH23711", name: "Transport Phenomena" },
+                { code: "CH23712", name: "Comprehension in Chemical Engineering" },
+                { code: "CH23713", name: "Process Engineering Economics" },
+                { code: "PE-III", name: "Professional Elective III" },
+                { code: "PE-IV", name: "Professional Elective IV" },
+                { code: "CH23721", name: "Chemical Reaction Engineering lab" },
+                { code: "CH23722", name: "Process Control Lab" },
+                { code: "CH23723", name: "Artificial Intelligence and Machine Learning for Chemical Engineers" },
+                { code: "CH23724", name: "CHEMSKILL" }
+            ],
+            "8": [
+                { code: "PE-V", name: "Professional Elective V" },
+                { code: "CH23811", name: "Project Work" }
+            ]
+        };
+
+        const aidsSubjects = {
+            "1": [
+                { code: "HS23111", name: "Technical Communication I" },
+                { code: "MA23116", name: "Mathematical Foundations for AI" },
+                { code: "GE23117", name: "Heritage of Tamils" },
+                { code: "PH23132", name: "Physics for Information Science" },
+                { code: "GE23131", name: "Programming using C" },
+                { code: "EE23133", name: "Basic Electrical and Electronics Engineering" },
+                { code: "GE23122", name: "Engineering Practices-Electrical and Electronics" },
+                { code: "MC23111", name: "Indian Constitution and Freedom Movement" }
+            ],
+            "2": [
+                { code: "MA23214", name: "Probability and Inferential Statistics" },
+                { code: "GE23217", name: "Tamils and Technology" },
+                { code: "GE23111", name: "Engineering Graphics" },
+                { code: "IT23231", name: "Digital Principles and Computer Architecture" },
+                { code: "AI23231", name: "Principles of Artificial Intelligence" },
+                { code: "CS23231", name: "Data Structures" },
+                { code: "HS23221", name: "Technical Communication II" },
+                { code: "GE23121", name: "Engineering Practices-Civil and Mechanical" },
+                { code: "CS23221", name: "Python Programming Lab" }
+            ],
+            "3": [
+                { code: "MA23313", name: "Discrete Mathematics for AI" },
+                { code: "AI23331", name: "Fundamentals of Machine Learning" },
+                { code: "CS23331", name: "Design and Analysis of Algorithms" },
+                { code: "CS23332", name: "Database Management Systems" },
+                { code: "CS23333", name: "Object Oriented Programming Using JAVA" },
+                { code: "MC23112", name: "Environmental Science and Engineering" }
+            ],
+            "4": [
+                { code: "OE-I", name: "Open Elective-I" },
+                { code: "MA23434", name: "Optimization Techniques for AI" },
+                { code: "AI23431", name: "Web Technology and Mobile Application" },
+                { code: "AD23431", name: "Statistical Analysis and Computing" },
+                { code: "CS23431", name: "Operating Systems" },
+                { code: "CS23432", name: "Software Construction" },
+                { code: "GE23421", name: "Soft Skills I" },
+                { code: "AD23421", name: "Internship" }
+            ],
+            "5": [
+                { code: "PE-I", name: "Professional Elective-I" },
+                { code: "PE-II", name: "Professional Elective - II" },
+                { code: "AD23531", name: "Big Data Architecture" },
+                { code: "AD23532", name: "Principles of Data Science" },
+                { code: "AI23531", name: "Deep Learning" },
+                { code: "CS23532", name: "Computer Networks" },
+                { code: "GE23521", name: "Soft Skills II" }
+            ],
+            "6": [
+                { code: "PE-III", name: "Professional Elective-III" },
+                { code: "OE-II", name: "Open Elective-II" },
+                { code: "AD23631", name: "Data Privacy and Security" },
+                { code: "AD23632", name: "Framework for Data and Visual Analytics" },
+                { code: "CS23634", name: "Fundamentals of Generative AI and Prompt Engineering" },
+                { code: "GE23627", name: "Design Thinking and Innovation" },
+                { code: "GE23621", name: "Problem Solving Techniques" }
+            ],
+            "7": [
+                { code: "PE-IV", name: "Professional Elective - IV" },
+                { code: "PE-V", name: "Professional Elective-V" },
+                { code: "AI23712", name: "Reinforcement Learning" },
+                { code: "CS23633", name: "Cloud Computing" },
+                { code: "AD23722", name: "Project Phase I" }
+            ],
+            "8": [
+                { code: "PE-VI", name: "Professional Elective- VI" },
+                { code: "AD23821", name: "Project Phase II" }
+            ]
+        };
+
+        function renderAddResultTable(subjects) {
+            const amTable = document.getElementById('ar-marks-table');
+            amTable.innerHTML = '';
+            subjects.forEach(sub => {
+                amTable.innerHTML += `
+                    <tr data-sub="${sub.code}">
+                        <td>
+                            <input type="text" class="form-control m-name" value="${sub.name}" style="font-weight:bold; width:100%; border:none; background:transparent; padding:0.25rem;" title="Click to edit subject name">
+                            <small style="color:var(--text-muted); padding-left:0.25rem;">(${sub.code})</small>
+                        </td>
+                        <td><input type="number" class="form-control m-int" min="0" max="20" required placeholder="0-20"></td>
+                        <td><input type="number" class="form-control m-ext" min="0" max="80" required placeholder="0-80"></td>
+                        <td class="m-total">-</td>
+                        <td class="m-grade">-</td>
+                    </tr>
+                `;
+            });
+
+            // Auto calc grade listeners
+            document.querySelectorAll('.m-int, .m-ext').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const tr = e.target.closest('tr');
+                    const intM = parseInt(tr.querySelector('.m-int').value) || 0;
+                    const extM = parseInt(tr.querySelector('.m-ext').value) || 0;
+                    const total = intM + extM;
+                    let grade = 'U', pass = false;
+                    if (extM >= 32 && total >= 40) {
+                        pass = true;
+                        if (total >= 90) { grade = 'O'; }
+                        else if (total >= 80) { grade = 'A+'; }
+                        else if (total >= 70) { grade = 'A'; }
+                        else if (total >= 60) { grade = 'B+'; }
+                        else if (total >= 50) { grade = 'B'; }
+                        else if (total >= 40) { grade = 'C'; }
+                    }
+                    tr.querySelector('.m-total').innerText = total;
+                    tr.querySelector('.m-grade').innerHTML = `<span class="badge ${pass?'badge-primary':'badge-error'}">${grade}</span>`;
+                });
+            });
+        }
+
+        // --- UTILS ---
+        function getToken() { return localStorage.getItem('ors_token'); }
+        function setToken(token) { localStorage.setItem('ors_token', token); }
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            };
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = type === 'success' ? '✅ '+message : '❌ '+message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function showLoader(callback) {
+            document.getElementById('loader').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+                if (callback) callback();
+            }, 500); // UI feel
+        }
+
+        function switchView(viewId) {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('student-view').classList.add('hidden');
+            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function switchAdminPanel(panelId) {
+            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('#admin-sidebar .nav-item').forEach(n => n.classList.remove('active'));
+            const pnl = document.getElementById(panelId);
+            if(pnl) pnl.classList.remove('hidden');
+            
+            const tab = document.querySelector(`[data-panel="${panelId}"]`);
+            if(tab) tab.classList.add('active');
+            
+            if(window.innerWidth <= 768) {
+                document.getElementById('admin-sidebar').classList.remove('open');
+            }
+        }
+
+        // --- AUTH & LOGIN ---
+        let currentUser = null;
+        let currentStudentData = null; // store for print
+
+        // Tabs
+        document.querySelectorAll('.login-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('.login-form').forEach(f => f.classList.add('hidden'));
+                document.getElementById(tab.dataset.target).classList.remove('hidden');
+            });
+        });
+
+        // Student Login
+        document.getElementById('student-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const rollNo = document.getElementById('login-roll').value.trim().toUpperCase();
+            const dob = document.getElementById('login-dob').value;
+            
+            document.getElementById('loader').classList.remove('hidden');
+            try {
+                const res = await fetch(`${API_URL}/auth/login/student`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rollNo, dob })
+                });
+                const data = await res.json();
+                document.getElementById('loader').classList.add('hidden');
+                
+                if (data.success) {
+                    setToken(data.data.token);
+                    currentUser = data.data.user;
+                    showToast('Login successful!');
+                    loadStudentDashboard();
+                    switchView('student-view');
+                } else {
+                    showToast(data.message || 'Login failed', 'error');
+                }
+            } catch (err) {
+                document.getElementById('loader').classList.add('hidden');
+                showToast('Network error logging in', 'error');
+            }
+        });
+
+        // Admin Login
+        document.getElementById('admin-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-admin-user').value;
+            const password = document.getElementById('login-admin-pass').value;
+            
+            document.getElementById('loader').classList.remove('hidden');
+            try {
+                const res = await fetch(`${API_URL}/auth/login/admin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                document.getElementById('loader').classList.add('hidden');
+                
+                if (data.success) {
+                    setToken(data.data.token);
+                    currentUser = data.data.user;
+                    showToast('Admin login successful!');
+                    loadAdminDashboard();
+                    switchView('admin-view');
+                } else {
+                    showToast(data.message || 'Login failed', 'error');
+                }
+            } catch (err) {
+                document.getElementById('loader').classList.add('hidden');
+                showToast('Network error logging in', 'error');
+            }
+        });
+
+        // Logout
+        document.querySelectorAll('.logout-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                showLoader(() => {
+                    localStorage.removeItem('ors_token');
+                    currentUser = null;
+                    document.getElementById('student-login').reset();
+                    document.getElementById('admin-login').reset();
+                    switchView('login-view');
+                    showToast('Logged out successfully');
+                });
+            });
+        });
+
+        // --- STUDENT DASHBOARD LOGIC ---
+        async function loadStudentDashboard() {
+            try {
+                const rollNo = currentUser.rollNo;
+                const res = await fetch(`${API_URL}/results/student/${rollNo}`, { headers: getHeaders() });
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast('Could not load student data', 'error');
+                    return;
+                }
+
+                currentStudentData = data.data; // save for printing
+                const student = data.data.student;
+                const results = data.data.results;
+
+                document.getElementById('s-name').innerText = student.name;
+                document.getElementById('s-roll').innerText = student.rollNo;
+                document.getElementById('s-dept').innerText = student.dept;
+                document.getElementById('s-sem').innerText = student.semester;
+                document.getElementById('s-year').innerText = student.year;
+
+                const tbody = document.getElementById('s-marks-table');
+                const summaryDiv = document.getElementById('s-summary');
+                const noRes = document.getElementById('s-no-result');
+                
+                tbody.innerHTML = '';
+                summaryDiv.innerHTML = '';
+
+                if (results.length === 0) {
+                    tbody.closest('.table-responsive').classList.add('hidden');
+                    noRes.classList.remove('hidden');
+                    summaryDiv.innerHTML = '<span class="badge badge-error">Result Not Published</span>';
+                    return;
+                }
+
+                tbody.closest('.table-responsive').classList.remove('hidden');
+                noRes.classList.add('hidden');
+
+                let totalPoints = 0, passedSubs = 0, failedSubs = 0;
+
+                results.forEach(r => {
+                    totalPoints += r.gradePoint;
+                    if (r.isPass) passedSubs++; else failedSubs++;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${r.subjectCode}</td>
+                        <td>${r.subjectName}</td>
+                        <td>${r.internalMarks} / 20</td>
+                        <td>${r.externalMarks} / 80</td>
+                        <td><b>${r.total}</b></td>
+                        <td><b>${r.grade}</b></td>
+                        <td><span class="badge ${r.isPass ? 'badge-success' : 'badge-error'}">${r.isPass ? 'PASS' : 'FAIL'}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                const cgpa = (totalPoints / results.length).toFixed(2);
+                const totalStatus = failedSubs === 0 ? 'PASS' : 'FAIL';
+
+                summaryDiv.innerHTML = `
+                    <b style="color:var(--text-muted)">Total Subjects:</b> <span>${results.length}</span>
+                    <b style="color:var(--text-muted)">Passed:</b> <span>${passedSubs}</span>
+                    <b style="color:var(--text-muted)">Failed:</b> <span>${failedSubs}</span>
+                    <b style="color:var(--text-muted)">CGPA / SGPA:</b> <span style="font-weight:bold; color:var(--primary); font-size:1.1rem;">${cgpa}</span>
+                    <b style="color:var(--text-muted)">Status:</b> <span><span class="badge ${failedSubs===0?'badge-success':'badge-error'}">${totalStatus}</span></span>
+                `;
+            } catch (err) {
+                showToast('Failed to connect to API', 'error');
+            }
+        }
+
+        function printResult() {
+            if(!currentStudentData || currentStudentData.results.length === 0) {
+                showToast("Cannot print. No result available.", "error"); return;
+            }
+
+            const st = currentStudentData.student;
+            const resData = currentStudentData.results;
+
+            document.getElementById('p-name').innerText = st.name;
+            document.getElementById('p-roll').innerText = st.rollNo;
+            document.getElementById('p-dept').innerText = st.dept;
+            document.getElementById('p-sem').innerText = st.semester;
+            document.getElementById('p-year').innerText = st.year;
+
+            const ptbody = document.getElementById('p-marks-table');
+            ptbody.innerHTML = '';
+            
+            let totalPoints = 0, failedSubs = 0;
+
+            resData.forEach(r => {
+                totalPoints += r.gradePoint;
+                if(!r.isPass) failedSubs++;
+
+                ptbody.innerHTML += `
+                    <tr>
+                        <td>${r.subjectCode}</td>
+                        <td>${r.subjectName}</td>
+                        <td>${r.internalMarks}</td>
+                        <td>${r.externalMarks}</td>
+                        <td>${r.total}</td>
+                        <td>${r.grade}</td>
+                        <td>${r.isPass ? 'PASS' : 'FAIL'}</td>
+                    </tr>
+                `;
+            });
+            const cgpa = (totalPoints / resData.length).toFixed(2);
+            
+            document.getElementById('p-cgpa').innerText = cgpa;
+            document.getElementById('p-status').innerText = failedSubs === 0 ? 'PASS' : 'FAIL';
+            
+            window.print();
+        }
+
+        // --- ADMIN DASHBOARD LOGIC ---
+        let allStudentsCache = [];
+
+        async function loadAdminDashboard() {
+            try {
+                // Fetch Stats
+                const statRes = await fetch(`${API_URL}/admin/dashboard`, { headers: getHeaders() });
+                const stats = await statRes.json();
+                if(stats.success) {
+                    document.getElementById('stat-students').innerText = stats.data.totalStudents;
+                    document.getElementById('stat-results').innerText = stats.data.totalPublishedStudents;
+                    document.getElementById('stat-pass').innerText = `${stats.data.passPercentage}%`;
+                    document.getElementById('stat-cgpa').innerText = stats.data.avgCGPA;
+
+                    // Render department-wise stats table
+                    const deptTbody = document.getElementById('dept-stats-table');
+                    deptTbody.innerHTML = '';
+                    if (stats.data.departmentWise && stats.data.departmentWise.length > 0) {
+                        stats.data.departmentWise.forEach(d => {
+                            const passVal = parseFloat(d.passPercentage);
+                            const cgpaVal = parseFloat(d.avgCGPA);
+                            const passBadge = passVal >= 80 ? 'badge-success' : passVal >= 50 ? 'badge-primary' : 'badge-error';
+                            const cgpaBadge = cgpaVal >= 8 ? 'badge-success' : cgpaVal >= 6 ? 'badge-primary' : 'badge-error';
+                            const shortDept = d.department.split('(')[0];
+                            const fullDept = d.department.includes('(') ? d.department.match(/\(([^)]+)\)/)?.[1] || '' : '';
+                            deptTbody.innerHTML += `
+                                <tr>
+                                    <td><b>${shortDept}</b>${fullDept ? '<br><span style="font-size:0.8rem; color:var(--text-muted);">' + fullDept + '</span>' : ''}</td>
+                                    <td>${d.totalStudents}</td>
+                                    <td>${d.publishedStudents}</td>
+                                    <td><span class="badge ${passBadge}">${d.passPercentage}%</span></td>
+                                    <td><span class="badge ${cgpaBadge}">${d.avgCGPA}</span></td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        deptTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:1.5rem;">No department data available yet.</td></tr>';
+                    }
+                }
+
+                // Fetch Students
+                const stuRes = await fetch(`${API_URL}/students`, { headers: getHeaders() });
+                const stuData = await stuRes.json();
+                if(stuData.success) {
+                    allStudentsCache = stuData.data;
+                    renderStudentsTable(allStudentsCache);
+                    
+                    // populate Department filter dropdown
+                    const deptSel = document.getElementById('ar-dept');
+                    deptSel.innerHTML = '<option value="">-- All Departments --</option>';
+                    const depts = [...new Set(allStudentsCache.map(s => s.dept))].sort();
+                    depts.forEach(d => {
+                        const shortName = d.split('(')[0];
+                        deptSel.innerHTML += `<option value="${d}">${d}</option>`;
+                    });
+
+                    // populate Add Result student dropdown (all initially)
+                    populateStudentDropdown(allStudentsCache);
+                }
+                
+                // Empty the table initially until a student is selected
+                document.getElementById('ar-marks-table').innerHTML = '';
+
+                // Fetch Results
+                renderResultsTable();
+
+            } catch(e) {
+                showToast("Error loading dashboard data", "error");
+            }
+        }
+
+        function renderStudentsTable(list) {
+            const tbody = document.getElementById('admin-students-table');
+            if (!tbody) return;
+            
+            // Group by department
+            const grouped = list.reduce((acc, obj) => {
+                const key = obj.dept || 'Other';
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(obj);
+                return acc;
+            }, {});
+
+            let html = '';
+            Object.keys(grouped).sort().forEach(deptName => {
+                const shortName = deptName.split('(')[0];
+                
+                html += `
+                    <tr style="background: rgba(128,128,128,0.1); border-top: 1px solid var(--border);">
+                        <td colspan="6" style="padding: 0.75rem 1rem;">
+                            <h4 style="margin: 0; color: var(--primary);">Department: ${shortName}</h4>
+                        </td>
+                    </tr>
+                `;
+                
+                grouped[deptName].forEach(s => {
+                    html += `
+                        <tr style="border-bottom: 1px dashed var(--border);">
+                            <td style="padding-left: 2rem;"><b>${s.rollNo}</b></td>
+                            <td>${s.name}</td>
+                            <td>${s.dept}</td>
+                            <td>Sem ${s.semester}</td>
+                            <td>${s.dob}</td>
+                            <td style="text-align: center;">
+                                <button type="button" class="btn-icon btn-remove-student" 
+                                        style="color: var(--error-text); cursor: pointer;" 
+                                        data-id="${s._id}" data-name="${s.name}" title="Remove Student">🗑</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+            tbody.innerHTML = html;
+        }
+
+        function applyStudentFilters() {
+            const term = document.getElementById('search-student').value.toLowerCase();
+            const yearStr = document.getElementById('filter-year').value;
+            
+            const filtered = allStudentsCache.filter(s => {
+                const matchName = s.name.toLowerCase().includes(term) || s.rollNo.toLowerCase().includes(term);
+                const matchYear = yearStr ? String(s.year) === yearStr : true;
+                return matchName && matchYear;
+            });
+            renderStudentsTable(filtered);
+        }
+
+        document.getElementById('search-student').addEventListener('input', applyStudentFilters);
+        document.getElementById('filter-year').addEventListener('change', applyStudentFilters);
+
+        // Event Delegation for Removing Students
+        let studentToDelete = null;
+        document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.btn-remove-student');
+            if (!btn) return;
+
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            const name = btn.dataset.name;
+
+            studentToDelete = { id, name };
+            
+            const modal = document.getElementById('confirm-modal');
+            const modalText = document.getElementById('confirm-modal-text');
+            modalText.innerText = `Are you sure you want to permanently remove ${name}? This will also delete all their results.`;
+            modal.classList.remove('hidden');
+        });
+
+        document.getElementById('confirm-modal-cancel').addEventListener('click', () => {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            studentToDelete = null;
+        });
+
+        document.getElementById('confirm-modal-ok').addEventListener('click', async () => {
+            if (!studentToDelete) return;
+            const { id, name } = studentToDelete;
+            document.getElementById('confirm-modal').classList.add('hidden');
+            studentToDelete = null;
+
+            try {
+                showLoader();
+                const res = await fetch(`${API_URL}/students/${id}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(`Student ${name} removed successfully!`, 'success');
+                    loadAdminDashboard();
+                } else {
+                    showToast(data.message || 'Failed to remove student', 'error');
+                }
+            } catch (err) {
+                console.error('Remove student error:', err);
+                showToast('Network error while removing student', 'error');
+            }
+        });
+
+        // Add Student JS
+        window.toggleAddStudentForm = function() {
+            document.getElementById('add-student-container').classList.toggle('hidden');
+        };
+
+        document.getElementById('add-student-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                rollNo: document.getElementById('add-stu-roll').value,
+                name: document.getElementById('add-stu-name').value,
+                dob: document.getElementById('add-stu-dob').value,
+                dept: document.getElementById('add-stu-dept').value,
+                semester: document.getElementById('add-stu-sem').value,
+                year: document.getElementById('add-stu-year').value
+            };
+            
+            showLoader();
+            try {
+                const res = await fetch(`${API_URL}/students`, {
+                    method: 'POST', headers: getHeaders(), body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(data.success) {
+                    showToast('Student registered!');
+                    e.target.reset();
+                    toggleAddStudentForm();
+                    loadAdminDashboard(); // Refresh
+                } else { showToast(data.message || 'Error adding student', 'error'); }
+            } catch(e) { showToast('Execution failed', 'error'); }
+        });
+
+        // Add Result UI Logic
+        let editingResultMap = {}; // Maps subjectCode -> resultId for PUT operations
+
+        // Helper to populate student dropdown based on filtered list
+        function populateStudentDropdown(students) {
+            const sel = document.getElementById('ar-student');
+            sel.innerHTML = '<option value="">-- Select Student --</option>';
+            students.forEach(s => {
+                sel.innerHTML += `<option value="${s.rollNo}" data-sem="${s.semester}" data-dept="${s.dept}">${s.rollNo} - ${s.name}</option>`;
+            });
+        }
+
+        // Department filter change handler
+        document.getElementById('ar-dept').addEventListener('change', (e) => {
+            const dept = e.target.value;
+            const filtered = dept ? allStudentsCache.filter(s => s.dept === dept) : allStudentsCache;
+            populateStudentDropdown(filtered);
+            // Reset semester and marks when department changes
+            document.getElementById('ar-sem').value = '';
+            editingResultMap = {};
+            document.querySelectorAll('#ar-marks-table tr').forEach(tr => {
+                tr.querySelector('.m-int').value = '';
+                tr.querySelector('.m-ext').value = '';
+                tr.querySelector('.m-total').innerText = '-';
+                tr.querySelector('.m-grade').innerText = '-';
+            });
+        });
+
+        document.getElementById('ar-student').addEventListener('change', async (e) => {
+            const rollNo = e.target.value;
+            const opt = e.target.options[e.target.selectedIndex];
+            const sem = opt ? opt.dataset.sem : '';
+            const dept = opt ? opt.dataset.dept : '';
+            document.getElementById('ar-sem').value = sem;
+            
+            // Render subjects dynamically based on Dept and Sem
+            if (dept && dept.includes('AIML')) {
+                const subjs = aimlSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && dept.includes('CSE')) {
+                const subjs = cseSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && (dept.includes('EEE') || dept.includes('Electrical and Electronics'))) {
+                const subjs = eeeSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && (dept.includes('ECE') || dept.includes('Electronics and Communication'))) {
+                const subjs = eceSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && (dept.includes('MECH') || dept.includes('Mechanical'))) {
+                const subjs = mechSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && (dept.includes('CIVIL') || dept.includes('Civil'))) {
+                const subjs = civilSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && (dept.includes('IT') || dept.includes('Information Technology'))) {
+                const subjs = itSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && (dept.includes('AERO') || dept.includes('Aeronautical'))) {
+                const subjs = aeroSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && (dept.includes('AUTO') || dept.includes('Automobile'))) {
+                const subjs = autoSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && (dept.includes('BME') || dept.includes('Biomedical'))) {
+                const subjs = bmeSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && (dept.includes('CHEM') || dept.includes('Chemical'))) {
+                const subjs = chemSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (dept && (dept.includes('AIDS') || dept.includes('Artificial Intelligence and Data Science'))) {
+                const subjs = aidsSubjects[sem] || coreSubjects;
+                renderAddResultTable(subjs);
+            } else if (rollNo) {
+                renderAddResultTable(coreSubjects);
+            } else {
+                document.getElementById('ar-marks-table').innerHTML = '';
+            }
+
+            // clear form silently
+            editingResultMap = {};
+            
+            if(!rollNo) return;
+
+            // Fetch existing results to prefill
+            try {
+                const res = await fetch(`${API_URL}/results/student/${rollNo}`, { headers: getHeaders() });
+                const data = await res.json();
+                if(data.success && data.data.results) {
+                    data.data.results.forEach(r => {
+                        editingResultMap[r.subjectCode] = r.id; // Map for PUT
+                        const tr = document.querySelector(`#ar-marks-table tr[data-sub="${r.subjectCode}"]`);
+                        if(tr) {
+                            const nameInput = tr.querySelector('.m-name');
+                            const intInput = tr.querySelector('.m-int');
+                            const extInput = tr.querySelector('.m-ext');
+                            if(nameInput) nameInput.value = r.subjectName;
+                            intInput.value = r.internalMarks;
+                            extInput.value = r.externalMarks;
+                            intInput.dispatchEvent(new Event('input')); // trigger recalc
+                        }
+                    });
+                }
+            } catch(err) {}
+        });
+
+        document.getElementById('add-result-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const rollNo = document.getElementById('ar-student').value;
+            if(!rollNo) return showToast('Please select a student', 'error');
+
+            showLoader();
+            try {
+                // Submit all rows
+                const rows = document.querySelectorAll('#ar-marks-table tr');
+                for (let tr of rows) {
+                    const subjectCode = tr.dataset.sub;
+                    const subjectName = tr.querySelector('.m-name').value;
+                    const internalMarks = tr.querySelector('.m-int').value;
+                    const externalMarks = tr.querySelector('.m-ext').value;
+
+                    // Skip if fields are empty
+                    if(internalMarks === '' || externalMarks === '') continue;
+
+                    const existingId = editingResultMap[subjectCode];
+                    if (existingId) {
+                        // UPDATE
+                        await fetch(`${API_URL}/results/${existingId}`, {
+                            method: 'PUT', headers: getHeaders(),
+                            body: JSON.stringify({ subjectName, internalMarks, externalMarks })
+                        });
+                    } else {
+                        // CREATE
+                        const r = await fetch(`${API_URL}/results`, {
+                            method: 'POST', headers: getHeaders(),
+                            body: JSON.stringify({ rollNo, subjectCode, subjectName, internalMarks, externalMarks })
+                        });
+                        const j = await r.json();
+                        if(j.success) editingResultMap[subjectCode] = j.data.id;
+                    }
+                }
+                
+                showToast('Marks saved successfully!');
+                switchAdminPanel('admin-panel-results');
+                renderResultsTable();
+            } catch(e) { showToast('Execution failed', 'error'); }
+        });
+
+        async function renderResultsTable() {
+            try {
+                const res = await fetch(`${API_URL}/results`, { headers: getHeaders() });
+                const data = await res.json();
+
+                const tbody = document.getElementById('admin-results-table');
+                const noRes = document.getElementById('admin-no-results');
+                const filterDept = document.getElementById('filter-results-dept').value;
+                
+                tbody.innerHTML = '';
+                if(!data.success || data.data.length === 0) {
+                    tbody.closest('table').classList.add('hidden');
+                    noRes.classList.remove('hidden');
+                    return;
+                }
+
+                const studentMap = {};
+                data.data.forEach(r => {
+                    // Filter by department if selected
+                    if (filterDept && r.dept !== filterDept) return;
+
+                    if (!studentMap[r.rollNo]) {
+                        studentMap[r.rollNo] = { name: r.name, rollNo: r.rollNo, dept: r.dept, semester: r.semester, totalPoints: 0, count: 0, isPass: true, subjects: [] };
+                    }
+                    const s = studentMap[r.rollNo];
+                    s.count++;
+                    const total = r.internal_marks + r.external_marks;
+                    let gp = 0, grade = 'U';
+                    if (r.external_marks >= 32 && total >= 40) {
+                        if (total >= 90) { gp = 10; grade = 'O'; }
+                        else if (total >= 80) { gp = 9; grade = 'A+'; }
+                        else if (total >= 70) { gp = 8; grade = 'A'; }
+                        else if (total >= 60) { gp = 7; grade = 'B+'; }
+                        else if (total >= 50) { gp = 6; grade = 'B'; }
+                        else if (total >= 40) { gp = 5; grade = 'C'; }
+                    } else { gp = 0; s.isPass = false; grade = 'U'; }
+                    s.totalPoints += gp;
+                    s.subjects.push({ name: r.subject_name, code: r.subject_code, internal: r.internal_marks, external: r.external_marks, total, grade });
+                });
+
+                const students = Object.values(studentMap);
+                if (students.length === 0) {
+                    tbody.closest('table').classList.add('hidden');
+                    noRes.classList.remove('hidden');
+                    noRes.innerText = filterDept ? `No results found for ${filterDept.split('(')[0]}.` : 'No results published yet.';
+                    return;
+                }
+
+                tbody.closest('table').classList.remove('hidden');
+                noRes.classList.add('hidden');
+
+                students.forEach(s => {
+                    const cgpa = (s.totalPoints / s.count).toFixed(2);
+                    
+                    const subRows = s.subjects.map(sub => `
+                        <tr style="background: transparent;">
+                            <td style="border:none; padding:4px 8px;">${sub.name} (${sub.code})</td>
+                            <td style="border:none; padding:4px 8px;">${sub.internal}</td>
+                            <td style="border:none; padding:4px 8px;">${sub.external}</td>
+                            <td style="border:none; padding:4px 8px;"><b>${sub.total}</b></td>
+                            <td style="border:none; padding:4px 8px;">${sub.grade}</td>
+                        </tr>
+                    `).join('');
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>${s.rollNo}</b></td>
+                            <td>${s.name}</td>
+                            <td><small>${s.dept.split('(')[0]}</small></td>
+                            <td>${s.semester}</td>
+                            <td><b>${cgpa}</b></td>
+                            <td><span class="badge ${s.isPass ? 'badge-success' : 'badge-error'}">${s.isPass ? 'PASS' : 'FAIL'}</span></td>
+                            <td style="display:flex; gap:0.5rem">
+                                <button class="btn" style="padding:0.25rem 0.75rem; font-size:0.8rem; background:var(--bg)" onclick="toggleSubjects('${s.rollNo}')">View Details</button>
+                                <button class="btn btn-primary" style="padding:0.25rem 0.75rem; font-size:0.8rem" onclick="editResult(null, '${s.rollNo}')">Edit Details</button>
+                            </td>
+                        </tr>
+                        <tr id="details-${s.rollNo}" class="hidden" style="background: rgba(128,128,128,0.05);">
+                            <td colspan="7" style="padding: 1rem 2rem;">
+                                <h5 style="margin-bottom:0.5rem; color:var(--text-muted)">Subject Breakdown</h5>
+                                <table style="width:100%; margin:0; border:1px solid var(--border); font-size:0.85rem;">
+                                    <thead style="background:var(--bg);">
+                                        <tr>
+                                            <th style="padding:4px 8px; border:none;">Subject</th>
+                                            <th style="padding:4px 8px; border:none;">Internal</th>
+                                            <th style="padding:4px 8px; border:none;">External</th>
+                                            <th style="padding:4px 8px; border:none;">Total</th>
+                                            <th style="padding:4px 8px; border:none;">Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${subRows}
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch(e) {}
+        }
+
+        window.toggleSubjects = function(rollNo) {
+            document.getElementById(`details-${rollNo}`).classList.toggle('hidden');
+        };
+
+        window.editResult = function(id, roll, subCode, intM, extM) {
+            switchAdminPanel('admin-panel-add');
+            document.getElementById('ar-student').value = roll;
+            document.getElementById('ar-student').dispatchEvent(new Event('change'));
+        };
+
+        window.deleteResult = async function(id) {
+            if(!confirm("Delete this result entry?")) return;
+            try {
+                const res = await fetch(`${API_URL}/results/${id}`, { method: 'DELETE', headers: getHeaders() });
+                const data = await res.json();
+                if(data.success) { showToast('Deleted'); renderResultsTable(); }
+            } catch(e) {}
+        }
+
+
+        // --- INTERACTIVITY ---
+        document.querySelectorAll('#admin-sidebar .nav-item').forEach(item => {
+            item.addEventListener('click', () => switchAdminPanel(item.dataset.panel));
+        });
+
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+            document.getElementById('admin-sidebar').classList.toggle('open');
+        });
+
+        // Dark Mode Toggle
+        const themeToggles = document.querySelectorAll('.theme-toggle');
+        if(localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+
+        themeToggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                if(current === 'dark') {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+        });
+
+    </script>
+    <script>
+        // --- AI INTEGRATION LOGIC ---
+        let currentAdminStats = null; // Store for AI
+
+        // Hook into existing loadAdminDashboard to save stats
+        const originalLoadAdminDashboard = loadAdminDashboard;
+        loadAdminDashboard = async function() {
+            await originalLoadAdminDashboard();
+            try {
+                const statRes = await fetch(`${API_URL}/admin/dashboard`, { headers: getHeaders() });
+                const stats = await statRes.json();
+                if (stats.success) currentAdminStats = stats.data;
+            } catch (e) {}
+        };
+
+        async function fetchStudentAIInsights() {
+            if (!currentStudentData || !currentStudentData.results || currentStudentData.results.length === 0) {
+                return showToast('No results available for analysis.', 'error');
+            }
+
+            const container = document.getElementById('student-ai-container');
+            const content = document.getElementById('student-ai-content');
+            
+            container.classList.remove('hidden');
+            content.innerHTML = '<span style="color: var(--text-muted);"><i>Generating AI insights... please wait.</i></span>';
+
+            // Calculate CGPA for the prompt
+            let totalPoints = 0;
+            currentStudentData.results.forEach(r => totalPoints += r.gradePoint);
+            const cgpa = (totalPoints / currentStudentData.results.length).toFixed(2);
+
+            try {
+                const res = await fetch(`${API_URL}/ai/student-insights`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        studentName: currentStudentData.student.name,
+                        rollNo: currentStudentData.student.rollNo,
+                        results: currentStudentData.results,
+                        cgpa: cgpa
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    content.innerText = data.data;
+                } else {
+                    content.innerHTML = `<span style="color: var(--error-text);">Error: ${data.message}</span>`;
+                    showToast(data.message, 'error');
+                }
+            } catch (err) {
+                content.innerHTML = `<span style="color: var(--error-text);">Network error while reaching AI service.</span>`;
+                showToast('Failed to connect to AI API', 'error');
+            }
+        }
+
+        async function askAdminAIQuery() {
+            const queryInput = document.getElementById('admin-ai-query');
+            const query = queryInput.value.trim();
+
+            if (!query) {
+                return showToast('Please enter a question for the AI.', 'error');
+            }
+
+            const container = document.getElementById('admin-ai-container');
+            const content = document.getElementById('admin-ai-content');
+            
+            container.classList.remove('hidden');
+            content.innerHTML = '<span style="color: var(--text-muted);"><i>Analyzing database and generating answer... please wait.</i></span>';
+
+            try {
+                const res = await fetch(`${API_URL}/ai/admin-insights`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    content.innerText = data.data;
+                } else {
+                    content.innerHTML = `<span style="color: var(--error-text);">Error: ${data.message}</span>`;
+                    showToast(data.message, 'error');
+                }
+            } catch (err) {
+                content.innerHTML = `<span style="color: var(--error-text);">Network error while reaching AI service.</span>`;
+                showToast('Failed to connect to AI API', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
